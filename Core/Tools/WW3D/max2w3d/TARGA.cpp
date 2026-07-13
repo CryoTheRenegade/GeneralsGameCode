@@ -68,8 +68,8 @@
 #include <memory.h>
 #include <string.h>
 #ifdef TGA_USES_WWLIB_FILE_CLASSES
-#include "wwfile.h"
-#include "ffactory.h"
+#include "WWLib/WWFILE.h"
+#include "WWLib/ffactory.h"
 #else
 #include <io.h>
 #include <fcntl.h>

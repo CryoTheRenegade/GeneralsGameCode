@@ -37,13 +37,13 @@
 #pragma once
 
 #ifndef ALWAYS_H
-#include "always.h"
+#include "WWLib/always.h"
 #endif
 
 #include <max.h>
 
 #ifndef WIN_H
-#include "win.h"
+#include "WWLib/win.h"
 #endif
 
 #ifndef PALETTE_H

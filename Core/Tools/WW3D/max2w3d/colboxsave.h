@@ -38,7 +38,7 @@
 
 #include <max.h>
 #include "w3d_file.h"
-#include "chunkio.h"
+#include "WWLib/chunkio.h"
 #include "PROGRESS.h"
 
 
