@@ -31,7 +31,7 @@
 #pragma once
 
 #include "ww3d.h"
-#include "texturefilter.h"
+#include "WW3D2/texturefilter.h"
 
 #include "Common/UserPreferences.h"
 
