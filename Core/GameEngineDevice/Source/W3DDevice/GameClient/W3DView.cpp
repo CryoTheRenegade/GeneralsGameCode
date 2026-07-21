@@ -174,6 +174,7 @@ W3DView::W3DView()
 	m_FXPitch = 1.0f;
 	m_freezeTimeForCameraMovement = false;
 	m_locationRequestValid = false;
+	m_locationRequestBridgeChangeCounter = 0;
 
 	//Enhancements from CNC3 WST 4/15/2003. JSC Integrated 5/20/03.
 	m_scriptedState = 0;
@@ -2548,6 +2549,12 @@ Bool W3DView::screenToTerrain( const ICoord2D *screen, Coord3D *world )
 		m_locationRequestValid = false;
 	}
 
+	const UnsignedInt bridgeChangeCounter = TheTerrainLogic ? TheTerrainLogic->getBridgeChangeCounter() : 0;
+	// TheSuperHackers @bugfix Use a persistent bridge-change counter so cached intersections remain invalidated after the change frame.
+	if (m_locationRequestBridgeChangeCounter != bridgeChangeCounter) {
+		m_locationRequestValid = false;
+	}
+
 	// TheSuperHackers @performance Cache only the latest screen-to-terrain result instead of retaining roughly 40 entries.
 	if (m_locationRequestValid &&
 		m_locationRequestScreen.x == screen->x && m_locationRequestScreen.y == screen->y)
@@ -2592,6 +2599,7 @@ Bool W3DView::screenToTerrain( const ICoord2D *screen, Coord3D *world )
 
 	m_locationRequestScreen = *screen;
 	m_locationRequestWorld = *world;
+	m_locationRequestBridgeChangeCounter = bridgeChangeCounter;
 	m_locationRequestValid = true;
 
 	return true;

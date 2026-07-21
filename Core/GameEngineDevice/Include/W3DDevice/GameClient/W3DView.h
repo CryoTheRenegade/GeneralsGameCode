@@ -281,6 +281,7 @@ private:
 	Bool		m_locationRequestValid;										///< Whether the cached screen-to-terrain result can be reused.
 	ICoord2D	m_locationRequestScreen;									///< Screen coordinate of the cached request.
 	Coord3D		m_locationRequestWorld;									///< Cached terrain intersection for the screen coordinate.
+	UnsignedInt m_locationRequestBridgeChangeCounter;						///< Bridge-change counter recorded with the cached result.
 
 	Coord3D m_previousLookAtPosition;
 	Coord2D m_scrollAmount;													///< scroll speed

@@ -977,6 +977,7 @@ TerrainLogic::TerrainLogic()
 	m_bridgeListHead = nullptr;
 	m_mapData = nullptr;
 	m_bridgeDamageStatesChanged = FALSE;
+	m_bridgeChangeCounter = 0;
 	m_mapDX = 0;
 	m_mapDY = 0;
 
@@ -1529,6 +1530,7 @@ PathfindLayerEnum TerrainLogic::alignOnTerrain( Real angle, const Coord3D& pos, 
 //-------------------------------------------------------------------------------------------------
 void TerrainLogic::addBridgeToLogic(BridgeInfo *pInfo, Dict *props, AsciiString bridgeTemplateName)
 {
+	++m_bridgeChangeCounter;
 	Bridge *pBridge = newInstance(Bridge)(*pInfo, props, bridgeTemplateName);
 	pBridge->setNext(m_bridgeListHead);
 	m_bridgeListHead = pBridge;
@@ -1542,6 +1544,7 @@ void TerrainLogic::addBridgeToLogic(BridgeInfo *pInfo, Dict *props, AsciiString 
 //-------------------------------------------------------------------------------------------------
 void TerrainLogic::addLandmarkBridgeToLogic(Object *bridgeObj)
 {
+	++m_bridgeChangeCounter;
 
 	Bridge *pBridge = newInstance(Bridge)(bridgeObj);
 	pBridge->setNext(m_bridgeListHead);
@@ -1863,6 +1866,7 @@ void TerrainLogic::updateBridgeDamageStates()
 		pBridge = pBridge->getNext();
 	}
 	m_bridgeDamageStatesChanged = true;
+	++m_bridgeChangeCounter;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1980,6 +1984,10 @@ Drawable *TerrainLogic::pickBridge(const Vector3 &from, const Vector3 &to, Vecto
 //-------------------------------------------------------------------------------------------------
 void TerrainLogic::deleteBridges()
 {
+	if (m_bridgeListHead) {
+		++m_bridgeChangeCounter;
+	}
+
 	Bridge *pNext = nullptr;
 	Bridge *pBridge;
 	// Traverse all waypoints.
@@ -2000,6 +2008,7 @@ void TerrainLogic::deleteBridge( Bridge *bridge )
 	// sanity
 	if( bridge == nullptr )
 		return;
+	++m_bridgeChangeCounter;
 
 	// check for removing the head
 	if( m_bridgeListHead == bridge )
