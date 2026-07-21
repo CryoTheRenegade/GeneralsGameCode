@@ -99,7 +99,6 @@
 
 // 30 fps
 Real TheW3DFrameLengthInMsec = MSEC_PER_LOGICFRAME_REAL; // default is 33msec/frame == 30fps. but we may change it depending on sys config.
-static const Int MAX_REQUEST_CACHE_SIZE = 40;	// Any size larger than 10, or examine code below for changes. jkmcd.
 static const Real DRAWABLE_OVERSCAN = 75.0f;  ///< 3D world coords of how much to overscan in the 3D screen region
 
 constexpr const Real NearZ = MAP_XY_FACTOR; ///< Set the near to MAP_XY_FACTOR. Improves z buffer resolution.
@@ -174,9 +173,7 @@ W3DView::W3DView()
 	m_shakeIntensity = 0.0f;
 	m_FXPitch = 1.0f;
 	m_freezeTimeForCameraMovement = false;
-	m_cameraHasMovedSinceRequest = true;
-	m_locationRequests.clear();
-	m_locationRequests.reserve(MAX_REQUEST_CACHE_SIZE + 10);	// This prevents the vector from ever re-allocating
+	m_locationRequestValid = false;
 
 	//Enhancements from CNC3 WST 4/15/2003. JSC Integrated 5/20/03.
 	m_scriptedState = 0;
@@ -829,7 +826,7 @@ void W3DView::updateCameraClipPlanes(const Matrix3D &transform)
 //-------------------------------------------------------------------------------------------------
 void W3DView::setCameraTransform(const Matrix3D &transform)
 {
-	m_cameraHasMovedSinceRequest = true;
+	m_locationRequestValid = false;
 
 #if defined(RTS_DEBUG)
 	m_3DCamera->Set_View_Plane( m_FOV, -1 );
@@ -2539,22 +2536,12 @@ Bool W3DView::screenToTerrain( const ICoord2D *screen, Coord3D *world )
 	if( screen == nullptr || world == nullptr || TheTerrainRenderObject == nullptr )
 		return false;
 
-	if (m_cameraHasMovedSinceRequest) {
-		m_locationRequests.clear();
-		m_cameraHasMovedSinceRequest = false;
-	}
-
-	if (m_locationRequests.size() > MAX_REQUEST_CACHE_SIZE) {
-		m_locationRequests.erase(m_locationRequests.begin(), m_locationRequests.begin() + 10);
-	}
-
-	// We insert them at the end for speed (no copies needed), but using the principle of locality, we should
-	// start searching where we most recently inserted
-	for (int i = m_locationRequests.size() - 1; i >= 0; --i) {
-		if (m_locationRequests[i].first.x == screen->x && m_locationRequests[i].first.y == screen->y) {
-			(*world) = m_locationRequests[i].second;
-			return true;
-		}
+	// TheSuperHackers @performance Cache only the latest screen-to-terrain result instead of retaining roughly 40 entries.
+	if (m_locationRequestValid &&
+		m_locationRequestScreen.x == screen->x && m_locationRequestScreen.y == screen->y)
+	{
+		*world = m_locationRequestWorld;
+		return true;
 	}
 
 	Vector3 rayStart,rayEnd;
@@ -2591,10 +2578,9 @@ Bool W3DView::screenToTerrain( const ICoord2D *screen, Coord3D *world )
 	world->y = intersection.Y;
 	world->z = intersection.Z;
 
-	PosRequest req;
-	req.first = (*screen);
-	req.second = (*world);
-	m_locationRequests.push_back(req);	// Insert this request at the end, requires no extra copies
+	m_locationRequestScreen = *screen;
+	m_locationRequestWorld = *world;
+	m_locationRequestValid = true;
 
 	return true;
 }
@@ -3754,6 +3740,8 @@ bool W3DView::getDesiredTerrainDrawSize(ICoord2D &dimensions) const
 void W3DView::updateTerrain()
 {
 	DEBUG_ASSERTCRASH(TheTerrainRenderObject != nullptr, ("TheTerrainRenderObject is null"));
+	// TheSuperHackers @bugfix Terrain render updates invalidate the cached terrain intersection.
+	m_locationRequestValid = false;
 
 	ICoord2D drawSize;
 
