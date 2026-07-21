@@ -206,6 +206,8 @@ void W3DView::setHeight(Int height)
 {
 	// extend View functionality
 	View::setHeight(height);
+	// TheSuperHackers @bugfix Viewport projection changes invalidate the cached terrain intersection.
+	m_locationRequestValid = false;
 
 	Vector2 vMin,vMax;
 	m_3DCamera->Set_Aspect_Ratio((Real)getWidth()/(Real)height);
@@ -226,6 +228,8 @@ void W3DView::setWidth(Int width)
 {
 	// extend View functionality
 	View::setWidth(width);
+	// TheSuperHackers @bugfix Viewport projection changes invalidate the cached terrain intersection.
+	m_locationRequestValid = false;
 
 	Vector2 vMin,vMax;
 	m_3DCamera->Set_Aspect_Ratio((Real)width/(Real)getHeight());
@@ -1464,6 +1468,8 @@ void W3DView::update()
 						Matrix3D camXForm;
 						camXForm.Look_At(camtran,objPos,0);
 						m_3DCamera->Set_Transform(camXForm);
+						// TheSuperHackers @bugfix This direct camera transform bypasses setCameraTransform.
+						m_locationRequestValid = false;
 					}
 				}
 			}
@@ -1680,8 +1686,9 @@ void W3DView::update()
 	}
 
 #ifdef DO_SEISMIC_SIMULATIONS
-  // Give the terrain a chance to refresh animating (Seismic) regions, if any.
-  TheTerrainVisual->updateSeismicSimulations();
+	// TheSuperHackers @bugfix Seismic terrain deformation invalidates the cached terrain intersection.
+	m_locationRequestValid = false;
+	TheTerrainVisual->updateSeismicSimulations();
 #endif
 
 	Region3D axisAlignedRegion;
@@ -2535,6 +2542,11 @@ Bool W3DView::screenToTerrain( const ICoord2D *screen, Coord3D *world )
 {
 	if( screen == nullptr || world == nullptr || TheTerrainRenderObject == nullptr )
 		return false;
+
+	// TheSuperHackers @bugfix Reject cached intersections while a terrain render update is pending.
+	if (TheTerrainRenderObject->doesNeedFullUpdate()) {
+		m_locationRequestValid = false;
+	}
 
 	// TheSuperHackers @performance Cache only the latest screen-to-terrain result instead of retaining roughly 40 entries.
 	if (m_locationRequestValid &&
