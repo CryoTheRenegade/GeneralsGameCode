@@ -40,6 +40,7 @@
 #include "Common/Xfer.h"
 
 #include "GameClient/TerrainVisual.h"
+#include "GameClient/View.h"
 
 #include "GameLogic/AI.h"
 #include "GameLogic/AIPathfind.h"
@@ -977,7 +978,6 @@ TerrainLogic::TerrainLogic()
 	m_bridgeListHead = nullptr;
 	m_mapData = nullptr;
 	m_bridgeDamageStatesChanged = FALSE;
-	m_bridgeChangeCounter = 0;
 	m_mapDX = 0;
 	m_mapDY = 0;
 
@@ -1530,7 +1530,9 @@ PathfindLayerEnum TerrainLogic::alignOnTerrain( Real angle, const Coord3D& pos, 
 //-------------------------------------------------------------------------------------------------
 void TerrainLogic::addBridgeToLogic(BridgeInfo *pInfo, Dict *props, AsciiString bridgeTemplateName)
 {
-	++m_bridgeChangeCounter;
+	if (TheTacticalView) {
+		TheTacticalView->onBridgeChanged();
+	}
 	Bridge *pBridge = newInstance(Bridge)(*pInfo, props, bridgeTemplateName);
 	pBridge->setNext(m_bridgeListHead);
 	m_bridgeListHead = pBridge;
@@ -1544,7 +1546,9 @@ void TerrainLogic::addBridgeToLogic(BridgeInfo *pInfo, Dict *props, AsciiString 
 //-------------------------------------------------------------------------------------------------
 void TerrainLogic::addLandmarkBridgeToLogic(Object *bridgeObj)
 {
-	++m_bridgeChangeCounter;
+	if (TheTacticalView) {
+		TheTacticalView->onBridgeChanged();
+	}
 
 	Bridge *pBridge = newInstance(Bridge)(bridgeObj);
 	pBridge->setNext(m_bridgeListHead);
@@ -1866,7 +1870,9 @@ void TerrainLogic::updateBridgeDamageStates()
 		pBridge = pBridge->getNext();
 	}
 	m_bridgeDamageStatesChanged = true;
-	++m_bridgeChangeCounter;
+	if (TheTacticalView) {
+		TheTacticalView->onBridgeChanged();
+	}
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -1985,7 +1991,9 @@ Drawable *TerrainLogic::pickBridge(const Vector3 &from, const Vector3 &to, Vecto
 void TerrainLogic::deleteBridges()
 {
 	if (m_bridgeListHead) {
-		++m_bridgeChangeCounter;
+		if (TheTacticalView) {
+			TheTacticalView->onBridgeChanged();
+		}
 	}
 
 	Bridge *pNext = nullptr;
@@ -2008,7 +2016,9 @@ void TerrainLogic::deleteBridge( Bridge *bridge )
 	// sanity
 	if( bridge == nullptr )
 		return;
-	++m_bridgeChangeCounter;
+	if (TheTacticalView) {
+		TheTacticalView->onBridgeChanged();
+	}
 
 	// check for removing the head
 	if( m_bridgeListHead == bridge )

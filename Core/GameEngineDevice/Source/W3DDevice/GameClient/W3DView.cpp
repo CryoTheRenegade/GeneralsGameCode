@@ -174,7 +174,6 @@ W3DView::W3DView()
 	m_FXPitch = 1.0f;
 	m_freezeTimeForCameraMovement = false;
 	m_locationRequestValid = false;
-	m_locationRequestBridgeChangeCounter = 0;
 
 	//Enhancements from CNC3 WST 4/15/2003. JSC Integrated 5/20/03.
 	m_scriptedState = 0;
@@ -207,7 +206,6 @@ void W3DView::setHeight(Int height)
 {
 	// extend View functionality
 	View::setHeight(height);
-	// TheSuperHackers @bugfix Viewport projection changes invalidate the cached terrain intersection.
 	m_locationRequestValid = false;
 
 	Vector2 vMin,vMax;
@@ -229,7 +227,6 @@ void W3DView::setWidth(Int width)
 {
 	// extend View functionality
 	View::setWidth(width);
-	// TheSuperHackers @bugfix Viewport projection changes invalidate the cached terrain intersection.
 	m_locationRequestValid = false;
 
 	Vector2 vMin,vMax;
@@ -1469,7 +1466,6 @@ void W3DView::update()
 						Matrix3D camXForm;
 						camXForm.Look_At(camtran,objPos,0);
 						m_3DCamera->Set_Transform(camXForm);
-						// TheSuperHackers @bugfix This direct camera transform bypasses setCameraTransform.
 						m_locationRequestValid = false;
 					}
 				}
@@ -1687,7 +1683,6 @@ void W3DView::update()
 	}
 
 #ifdef DO_SEISMIC_SIMULATIONS
-	// TheSuperHackers @bugfix Seismic terrain deformation invalidates the cached terrain intersection.
 	m_locationRequestValid = false;
 	TheTerrainVisual->updateSeismicSimulations();
 #endif
@@ -2544,18 +2539,6 @@ Bool W3DView::screenToTerrain( const ICoord2D *screen, Coord3D *world )
 	if( screen == nullptr || world == nullptr || TheTerrainRenderObject == nullptr )
 		return false;
 
-	// TheSuperHackers @bugfix Reject cached intersections while a terrain render update is pending.
-	if (TheTerrainRenderObject->doesNeedFullUpdate()) {
-		m_locationRequestValid = false;
-	}
-
-	const UnsignedInt bridgeChangeCounter = TheTerrainLogic ? TheTerrainLogic->getBridgeChangeCounter() : 0;
-	// TheSuperHackers @bugfix Use a persistent bridge-change counter so cached intersections remain invalidated after the change frame.
-	if (m_locationRequestBridgeChangeCounter != bridgeChangeCounter) {
-		m_locationRequestValid = false;
-	}
-
-	// TheSuperHackers @performance Cache only the latest screen-to-terrain result instead of retaining roughly 40 entries.
 	if (m_locationRequestValid &&
 		m_locationRequestScreen.x == screen->x && m_locationRequestScreen.y == screen->y)
 	{
@@ -2599,7 +2582,6 @@ Bool W3DView::screenToTerrain( const ICoord2D *screen, Coord3D *world )
 
 	m_locationRequestScreen = *screen;
 	m_locationRequestWorld = *world;
-	m_locationRequestBridgeChangeCounter = bridgeChangeCounter;
 	m_locationRequestValid = true;
 
 	return true;
@@ -3760,8 +3742,6 @@ bool W3DView::getDesiredTerrainDrawSize(ICoord2D &dimensions) const
 void W3DView::updateTerrain()
 {
 	DEBUG_ASSERTCRASH(TheTerrainRenderObject != nullptr, ("TheTerrainRenderObject is null"));
-	// TheSuperHackers @bugfix Terrain render updates invalidate the cached terrain intersection.
-	m_locationRequestValid = false;
 
 	ICoord2D drawSize;
 

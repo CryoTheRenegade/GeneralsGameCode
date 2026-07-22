@@ -295,7 +295,6 @@ public:
 	virtual void updateBridgeDamageStates(); ///< Updates bridge's damage info.
 
 	Bool anyBridgesDamageStatesChanged() {return m_bridgeDamageStatesChanged; } ///< Bridge damage states updated.
-	UnsignedInt getBridgeChangeCounter() const { return m_bridgeChangeCounter; } ///< Bridge-change counter used for cache invalidation.
 	Bool isBridgeRepaired(const Object *bridge); ///< Is bridge repaired?
 	Bool isBridgeBroken(const Object *bridge); ///< Is bridge Broken?
 	void getBridgeAttackPoints(const Object *bridge, TBridgeAttackInfo *info); ///< Get bridge attack points.
@@ -348,8 +347,6 @@ protected:
 	Bridge *m_bridgeListHead;
 
 	Bool		m_bridgeDamageStatesChanged;
-	// TheSuperHackers @bugfix Track bridge changes beyond the lifetime of the original per-frame damage-state flag.
-	UnsignedInt m_bridgeChangeCounter;
 
 	AsciiString m_filenameString;  ///< filename for terrain data
 

@@ -167,6 +167,8 @@ public:
 	virtual void scrollBy( const Coord2D *delta ) override;  ///< Shift the view by the given delta
 
 	virtual void forceRedraw() override;
+	virtual void onHeightMapChanged() override { m_locationRequestValid = false; }
+	virtual void onBridgeChanged() override { m_locationRequestValid = false; }
 
 	virtual Bool isDoingScriptedCamera() override;
 	virtual void stopDoingScriptedCamera() override;
@@ -277,11 +279,10 @@ private:
 	Bool		m_freezeTimeForCameraMovement;
 	Int			m_timeMultiplier;												///< Time speedup multiplier.
 
-	// TheSuperHackers @performance Retain only the latest screen-to-terrain result in the cache.
-	Bool		m_locationRequestValid;										///< Whether the cached screen-to-terrain result can be reused.
-	ICoord2D	m_locationRequestScreen;									///< Screen coordinate of the cached request.
-	Coord3D		m_locationRequestWorld;									///< Cached terrain intersection for the screen coordinate.
-	UnsignedInt m_locationRequestBridgeChangeCounter;						///< Bridge-change counter recorded with the cached result.
+	// TheSuperHackers @performance Cache only the latest screen-to-terrain result.
+	Bool		m_locationRequestValid;
+	ICoord2D	m_locationRequestScreen;
+	Coord3D		m_locationRequestWorld;
 
 	Coord3D m_previousLookAtPosition;
 	Coord2D m_scrollAmount;													///< scroll speed
