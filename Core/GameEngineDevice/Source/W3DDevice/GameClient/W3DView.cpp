@@ -173,7 +173,7 @@ W3DView::W3DView()
 	m_shakeIntensity = 0.0f;
 	m_FXPitch = 1.0f;
 	m_freezeTimeForCameraMovement = false;
-	m_locationRequestValid = false;
+	m_lastScreenToTerrainValid = false;
 
 	//Enhancements from CNC3 WST 4/15/2003. JSC Integrated 5/20/03.
 	m_scriptedState = 0;
@@ -206,7 +206,6 @@ void W3DView::setHeight(Int height)
 {
 	// extend View functionality
 	View::setHeight(height);
-	m_locationRequestValid = false;
 
 	Vector2 vMin,vMax;
 	m_3DCamera->Set_Aspect_Ratio((Real)getWidth()/(Real)height);
@@ -218,6 +217,7 @@ void W3DView::setHeight(Int height)
 	// showing or hiding the control bar will change the viewable area.
 	m_cameraAreaConstraintsValid = false;
 	m_recalcCamera = true;
+	m_lastScreenToTerrainValid = false;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -227,7 +227,6 @@ void W3DView::setWidth(Int width)
 {
 	// extend View functionality
 	View::setWidth(width);
-	m_locationRequestValid = false;
 
 	Vector2 vMin,vMax;
 	m_3DCamera->Set_Aspect_Ratio((Real)width/(Real)getHeight());
@@ -241,6 +240,7 @@ void W3DView::setWidth(Int width)
 
 	m_cameraAreaConstraintsValid = false;
 	m_recalcCamera = true;
+	m_lastScreenToTerrainValid = false;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -828,7 +828,7 @@ void W3DView::updateCameraClipPlanes(const Matrix3D &transform)
 //-------------------------------------------------------------------------------------------------
 void W3DView::setCameraTransform(const Matrix3D &transform)
 {
-	m_locationRequestValid = false;
+	m_lastScreenToTerrainValid = false;
 
 #if defined(RTS_DEBUG)
 	m_3DCamera->Set_View_Plane( m_FOV, -1 );
@@ -1466,7 +1466,7 @@ void W3DView::update()
 						Matrix3D camXForm;
 						camXForm.Look_At(camtran,objPos,0);
 						m_3DCamera->Set_Transform(camXForm);
-						m_locationRequestValid = false;
+						m_lastScreenToTerrainValid = false;
 					}
 				}
 			}
@@ -1683,7 +1683,6 @@ void W3DView::update()
 	}
 
 #ifdef DO_SEISMIC_SIMULATIONS
-	m_locationRequestValid = false;
 	TheTerrainVisual->updateSeismicSimulations();
 #endif
 
@@ -2539,10 +2538,10 @@ Bool W3DView::screenToTerrain( const ICoord2D *screen, Coord3D *world )
 	if( screen == nullptr || world == nullptr || TheTerrainRenderObject == nullptr )
 		return false;
 
-	if (m_locationRequestValid &&
-		m_locationRequestScreen.x == screen->x && m_locationRequestScreen.y == screen->y)
+	if (m_lastScreenToTerrainValid &&
+		m_lastScreenToTerrainScreen.x == screen->x && m_lastScreenToTerrainScreen.y == screen->y)
 	{
-		*world = m_locationRequestWorld;
+		*world = m_lastScreenToTerrainWorld;
 		return true;
 	}
 
@@ -2580,9 +2579,9 @@ Bool W3DView::screenToTerrain( const ICoord2D *screen, Coord3D *world )
 	world->y = intersection.Y;
 	world->z = intersection.Z;
 
-	m_locationRequestScreen = *screen;
-	m_locationRequestWorld = *world;
-	m_locationRequestValid = true;
+	m_lastScreenToTerrainScreen = *screen;
+	m_lastScreenToTerrainWorld = *world;
+	m_lastScreenToTerrainValid = true;
 
 	return true;
 }
