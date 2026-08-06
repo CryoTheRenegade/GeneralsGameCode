@@ -187,9 +187,20 @@ NetCommandRef * NetCommandList::addMessage(NetCommandRef *&msg) {
 
 		// TheSuperHackers @bugfix CryoTheRenegade 03/08/2026 Keep both cached
 		// insertion boundaries consistent with the full scan's polymorphic sort key.
+#if defined(NETCOMMANDLIST_TEST_BUGGY_FASTPATH)
+		// TheSuperHackers @test CryoTheRenegade 06/08/2026 Test-only toggle that
+		// restores the pre-fix behavior (fast path keys on getID() instead of
+		// getSortNumber()) so the injected command-order canary can reproduce the
+		// issue #2795 divergence in a test build. NEVER enable for retail.
+		const Int lastKey = lastCommand->getID();
+		const Int newKey = command->getID();
+#else
+		const Int lastKey = lastCommand->getSortNumber();
+		const Int newKey = command->getSortNumber();
+#endif
 		bool canInsertAfterLast = lastCommand->getNetCommandType() == command->getNetCommandType()
 			&& lastCommand->getPlayerID() == command->getPlayerID()
-			&& isCommandIdNewer(command->getSortNumber(), lastCommand->getSortNumber());
+			&& isCommandIdNewer((UnsignedShort)newKey, (UnsignedShort)lastKey);
 
 		if (canInsertAfterLast && nextCommandRef != nullptr)
 		{

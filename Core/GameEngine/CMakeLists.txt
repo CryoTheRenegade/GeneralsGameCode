@@ -1185,6 +1185,17 @@ target_compile_definitions(corei_gameengine_private INTERFACE
     IG_DEBUG_STACKTRACE
 )
 
+# TheSuperHackers @test CryoTheRenegade 06/08/2026 Test-only toggle. When ON,
+# NetCommandList's cached fast path keys on getID() instead of getSortNumber()
+# (the pre-fix behavior), so the injected command-order canary can reproduce the
+# issue #2795 divergence in a test build. NEVER enable for retail/CI release.
+option(RTS_NETCOMMANDLIST_TEST_BUGGY_FASTPATH "Test-only: restore pre-#2795-fix fast-path key (getID) to reproduce the divergence" OFF)
+if(RTS_NETCOMMANDLIST_TEST_BUGGY_FASTPATH)
+    target_compile_definitions(corei_gameengine_private INTERFACE
+        NETCOMMANDLIST_TEST_BUGGY_FASTPATH
+    )
+endif()
+
 target_precompile_headers(corei_gameengine_private INTERFACE
     Include/Precompiled/PreRTS.h
 )
