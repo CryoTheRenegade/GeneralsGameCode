@@ -430,6 +430,48 @@ void GameLogic::logicMessageDispatcher( GameMessage *msg, void *userData )
 	GameMessage::Type msgType = msg->getType();
 	switch( msgType )
 	{
+		//---------------------------------------------------------------------------------------------
+		// TheSuperHackers @test CryoTheRenegade 06/08/2026 General command-order
+		// regression guard. NOT FOR RETAIL. These commands are injected in a strict
+		// per-player ascending sequence (see GameLogic::update); any that execute out
+		// of order are flagged here. It is a general canary for ordering regressions
+		// that reach execution order. Note: ad-hoc modeling of issue #2795 showed
+		// that bug only reorders ACK bookkeeping, not synchronized game commands, so
+		// this guard is not expected to fire for #2795 -- that divergence needs a
+		// reference-based check against the live NetCommandList, not a stream check.
+		case GameMessage::MSG_TEST_SEQUENTIAL_ORDER:
+		{
+			static int s_expectedSeq[MAX_PLAYER_COUNT] = { 0 };
+			static const int s_sequenceTotal = 100000; // matches the injection wrap in GameLogic::update (10000 * 10)
+
+			const int playerIndex = msg->getPlayerIndex();
+			if (playerIndex < 0 || playerIndex >= MAX_PLAYER_COUNT)
+			{
+				break;
+			}
+
+			if (s_expectedSeq[playerIndex] == s_sequenceTotal)
+			{
+				s_expectedSeq[playerIndex] = 0;
+			}
+
+			const int seq = msg->getArgument(0)->integer;
+			if (s_expectedSeq[playerIndex] + 1 != seq)
+			{
+				const UnicodeString mismatchStr = TheGameText->FETCH_OR_SUBSTITUTE(
+					"GUI:SequentialOrderMismatch", L"NetCommandList order mismatch! Frame:%d Player:%d --- expected seq %d, got seq %d (sort bug #2795 present)");
+				TheInGameUI->message(mismatchStr, getFrame(), playerIndex, s_expectedSeq[playerIndex] + 1, seq);
+				DEBUG_LOG(("NetCommandList order mismatch! Frame:%d Player:%d --- expected seq %d, got seq %d", getFrame(), playerIndex, s_expectedSeq[playerIndex] + 1, seq));
+
+				s_expectedSeq[playerIndex] = seq;
+			}
+			else
+			{
+				s_expectedSeq[playerIndex] += 1;
+			}
+		}
+		break;
+
 		case GameMessage::MSG_NEW_GAME:
 		{
 			onNewGame(msg);

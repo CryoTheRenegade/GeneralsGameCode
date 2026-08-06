@@ -3218,6 +3218,22 @@ void GameLogic::update()
 		TheTerrainLogic->UPDATE();
 	}
 
+	// TheSuperHackers @test CryoTheRenegade 06/08/2026 Command-order regression
+	// guard injection. NOT FOR RETAIL. From frame 100 every player appends a burst
+	// of sequenced test commands each frame so that any ordering regression that
+	// reaches execution order is caught by the dispatcher canary. (Issue #2795
+	// itself only reorders ACK bookkeeping, so it does not trip this canary.)
+	if (m_frame >= 100 && getGameMode() != GAME_SHELL && getGameMode() != GAME_NONE)
+	{
+		static const int s_commandsPerFrame = 10;
+		static const int s_sequenceWrap = 10000;
+		for (int i = 1; i <= s_commandsPerFrame; ++i)
+		{
+			GameMessage *msg = TheMessageStream->appendMessage(GameMessage::MSG_TEST_SEQUENTIAL_ORDER);
+			msg->appendIntegerArgument(i + ((m_frame - 100) % s_sequenceWrap) * s_commandsPerFrame);
+		}
+	}
+
 	// force CRC calculation, so we can keep a cache of the last N CRCs.  We do this right where the recorder
 	// would be getting the CRC anyway, so replays can get the CRCs from the exact instant in time as the original.
 	Bool isMPGameOrReplay = (TheRecorder && TheRecorder->isMultiplayer() && getGameMode() != GAME_SHELL && getGameMode() != GAME_NONE);

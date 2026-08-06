@@ -614,8 +614,14 @@ public:
 		MSG_DEBUG_KILL_OBJECT,
 #endif
 
+		// TheSuperHackers @test CryoTheRenegade 06/08/2026 Test message for
+		// NetCommandList sort-order verification. NOT FOR RETAIL. Injected in a
+		// strict per-player sequence; GameLogic::logicMessageDispatcher flags any
+		// message that executes out of order (see issue #2795 / PR #3052).
+		MSG_TEST_SEQUENTIAL_ORDER,
+
 //*********************************************************************************************************
-		MSG_END_NETWORK_MESSAGES = 1999,						///< MARKER TO DELINEATE MESSAGES THAT GO OVER THE NETWORK
+		MSG_END_NETWORK_MESSAGES = 1999,					///< MARKER TO DELINEATE MESSAGES THAT GO OVER THE NETWORK
 //*********************************************************************************************************
 //*********************************************************************************************************
 
