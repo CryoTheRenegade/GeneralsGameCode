@@ -85,12 +85,62 @@ add_subdirectory(resources)
 add_subdirectory(Core)
 
 # Add main build targets
+set(NAMEKEYGENERATOR_TEST_COMMON_SRC
+    Core/Tests/NameKeyGeneratorTest.cpp
+    Core/Tests/NameKeyGeneratorTestMemory.cpp
+    Core/GameEngine/Source/Common/System/AsciiString.cpp
+)
+
 if(RTS_BUILD_ZEROHOUR)
     add_subdirectory(GeneralsMD)
+
+    add_executable(z_namekeygenerator_test EXCLUDE_FROM_ALL
+        ${NAMEKEYGENERATOR_TEST_COMMON_SRC}
+        GeneralsMD/Code/GameEngine/Source/Common/NameKeyGenerator.cpp
+        GeneralsMD/Code/GameEngine/Source/Common/System/CriticalSection.cpp
+    )
+    target_include_directories(z_namekeygenerator_test PRIVATE
+        GeneralsMD/Code/GameEngine/Include
+        GeneralsMD/Code/GameEngine/Include/Precompiled
+        Core/GameEngine/Include
+        Core/GameEngine/Include/Precompiled
+        Core/Libraries/Include
+        Core/Libraries/Source/WWVegas
+    )
+    target_compile_definitions(z_namekeygenerator_test PRIVATE
+        DISABLE_GAMEMEMORY=1
+        DISABLE_GAMEMEMORY_NEW_OPERATORS=1
+    )
+    target_link_libraries(z_namekeygenerator_test PRIVATE
+        zi_always
+        core_wwlib
+    )
 endif()
 
 if(RTS_BUILD_GENERALS)
     add_subdirectory(Generals)
+
+    add_executable(g_namekeygenerator_test EXCLUDE_FROM_ALL
+        ${NAMEKEYGENERATOR_TEST_COMMON_SRC}
+        Generals/Code/GameEngine/Source/Common/NameKeyGenerator.cpp
+        Generals/Code/GameEngine/Source/Common/System/CriticalSection.cpp
+    )
+    target_include_directories(g_namekeygenerator_test PRIVATE
+        Generals/Code/GameEngine/Include
+        Generals/Code/GameEngine/Include/Precompiled
+        Core/GameEngine/Include
+        Core/GameEngine/Include/Precompiled
+        Core/Libraries/Include
+        Core/Libraries/Source/WWVegas
+    )
+    target_compile_definitions(g_namekeygenerator_test PRIVATE
+        DISABLE_GAMEMEMORY=1
+        DISABLE_GAMEMEMORY_NEW_OPERATORS=1
+    )
+    target_link_libraries(g_namekeygenerator_test PRIVATE
+        gi_always
+        core_wwlib
+    )
 endif()
 
 feature_summary(WHAT ENABLED_FEATURES DESCRIPTION "Enabled features:")
