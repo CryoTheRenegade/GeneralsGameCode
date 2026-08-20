@@ -55,6 +55,7 @@
 //-----------------------------------------------------------------------------
 #include "Common/SubsystemInterface.h"
 #include "Common/MessageStream.h"
+#include "GameClient/KeyDefs.h"
 //-----------------------------------------------------------------------------
 // FORWARD REFERENCES /////////////////////////////////////////////////////////
 //-----------------------------------------------------------------------------
@@ -94,13 +95,18 @@ public:
 
 	void addHotKey( GameWindow *win, const AsciiString& key);
 	Bool executeHotKey( const AsciiString& key); // called front eh HotKeyTranslator
+	void setKeyUpSuppressed(KeyDefType key, Bool suppressed);
+	Bool consumeKeyUpSuppression(KeyDefType key);
 
 	AsciiString searchHotKey( const AsciiString& label);
 	AsciiString searchHotKey( const UnicodeString& uStr );
 
 private:
+	void clearKeyUpSuppressions();
+
 	typedef std::map<AsciiString, HotKey> HotKeyMap;
 	HotKeyMap m_hotKeyMap;
+	Bool m_suppressKeyUp[KEY_COUNT];
 };
 extern HotKeyManager *TheHotKeyManager;
 //-----------------------------------------------------------------------------
