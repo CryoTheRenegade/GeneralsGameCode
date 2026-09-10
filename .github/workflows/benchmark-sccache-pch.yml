@@ -1,0 +1,76 @@
+name: Benchmark sccache and PCH
+
+on:
+  push:
+    branches: [benchmark/sccache-pch-20260910]
+    paths:
+      - .github/workflows/benchmark-sccache-pch.yml
+      - scripts/benchmark-sccache-pch.ps1
+      - cmake/benchmark-textual-pch.cmake
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    name: ${{ matrix.game }} / ${{ matrix.mode }}
+    runs-on: windows-2022
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        game: [Generals, GeneralsMD]
+        mode: [baseline, pch-cache, textual-cache]
+    env:
+      SCCACHE_DIR: ${{ github.workspace }}/build/sccache
+      SCCACHE_CACHE_SIZE: 4G
+      SCCACHE_GHA_ENABLED: 'false'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: x86
+      - name: Set up sccache
+        uses: Mozilla-Actions/sccache-action@fd02668681acd5f960e1372061bee5e3e987195c # v0.0.11
+        with:
+          version: v0.17.0
+      - name: Configure
+        shell: pwsh
+        env:
+          BENCHMARK_GAME: ${{ matrix.game }}
+          BENCHMARK_MODE: ${{ matrix.mode }}
+        run: ./scripts/benchmark-sccache-pch.ps1 -Phase configure
+      - name: Cold build
+        shell: pwsh
+        env:
+          BENCHMARK_GAME: ${{ matrix.game }}
+          BENCHMARK_MODE: ${{ matrix.mode }}
+        run: ./scripts/benchmark-sccache-pch.ps1 -Phase cold
+      - name: Clean outputs and restart cache server
+        if: matrix.mode != 'baseline'
+        shell: pwsh
+        run: |
+          cmake --build --preset win32 --target clean
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          sccache --stop-server
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          sccache --start-server
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Warm cache clean build
+        if: matrix.mode != 'baseline'
+        shell: pwsh
+        env:
+          BENCHMARK_GAME: ${{ matrix.game }}
+          BENCHMARK_MODE: ${{ matrix.mode }}
+        run: ./scripts/benchmark-sccache-pch.ps1 -Phase warm
+      - name: Upload measurements
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: sccache-${{ matrix.game }}-${{ matrix.mode }}
+          path: build/benchmark-results/
+          if-no-files-found: error
+          retention-days: 14
