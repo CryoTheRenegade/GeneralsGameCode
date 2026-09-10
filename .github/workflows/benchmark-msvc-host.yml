@@ -1,0 +1,49 @@
+name: Benchmark MSVC host
+
+on:
+  push:
+    branches: [benchmark/msvc-host-20260909]
+    paths:
+      - .github/workflows/benchmark-msvc-host.yml
+      - scripts/benchmark-msvc-host.ps1
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    name: ${{ matrix.game }} / ${{ matrix.arch }} / sample ${{ matrix.sample }}
+    runs-on: windows-2022
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        sample: [1, 2, 3]
+        game: [Generals, GeneralsMD]
+        arch: [x86, amd64_x86]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up MSVC
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+        with:
+          arch: ${{ matrix.arch }}
+
+      - name: Measure clean Release build
+        shell: pwsh
+        env:
+          BENCHMARK_GAME: ${{ matrix.game }}
+          BENCHMARK_ARCH: ${{ matrix.arch }}
+          BENCHMARK_SAMPLE: ${{ matrix.sample }}
+        run: ./scripts/benchmark-msvc-host.ps1
+
+      - name: Upload measurements
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: benchmark-${{ matrix.game }}-${{ matrix.arch }}-${{ matrix.sample }}
+          path: build/benchmark-results/
+          if-no-files-found: error
+          retention-days: 14
