@@ -187,28 +187,14 @@ void Keyboard::updateKeys()
 
 		}
 
+		BitSet( m_keys[ index ].state, m_modifiers );
+
 		index++;
 
 	}
 
 	// check for key repeats
 	checkKeyRepeat();
-
-	if( m_modifiers )
-	{
-		index = 0;
-		while( m_keys[ index ].key != KEY_NONE )
-		{
-
-			// set in the modifier data into the already existing up/down state
-			BitSet( m_keys[ index ].state, m_modifiers );
-
-			// next key
-			index++;
-
-		}
-
-	}
 
 }
 
@@ -246,7 +232,7 @@ Bool Keyboard::checkKeyRepeat()
 			{
 				// Add key to this frame
 				m_keys[ index ].key = (UnsignedByte)key;
-				m_keys[ index ].state = KEY_STATE_DOWN | KEY_STATE_AUTOREPEAT;  // note: not a bitset; this is an assignment
+				m_keys[ index ].state = KEY_STATE_DOWN | KEY_STATE_AUTOREPEAT | m_modifiers;  // note: not a bitset; this is an assignment
 				m_keys[ index ].status = KeyboardIO::STATUS_UNUSED;
 
 				// Set End Flag
