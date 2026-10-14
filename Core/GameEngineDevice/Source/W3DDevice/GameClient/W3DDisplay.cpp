@@ -938,6 +938,13 @@ void W3DDisplay::init()
 		if (TheGlobalData->m_displayGamma != 1.0f)
 			setGamma(TheGlobalData->m_displayGamma,0.0f,1.0f,FALSE);
 	}
+	else
+	{
+		// TheSuperHackers @performance CryoTheRenegade 14/10/2026 Headless mode creates textures as empty placeholders
+		// that never queue thumbnail or background load requests.
+		WW3D::Enable_Texturing(false);
+		WW3D::Set_Thumbnail_Enabled(false);
+	}
 
 	initAssets();
 
