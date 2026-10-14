@@ -1075,8 +1075,13 @@ void ControlBar::init()
 	postProcessCommands();
 
 	// Init the scheme manager, this will call its own INI init function.
-	m_controlBarSchemeManager = NEW ControlBarSchemeManager;
-	m_controlBarSchemeManager->init();
+	// TheSuperHackers @performance CryoTheRenegade 14/10/2026 Headless mode does not load the control bar schemes,
+	// because they only hold the control bar art. All users of the scheme manager test it for null.
+	if (!TheGlobalData->m_headless)
+	{
+		m_controlBarSchemeManager = NEW ControlBarSchemeManager;
+		m_controlBarSchemeManager->init();
+	}
 
 	//Added this check because the builder uses the ControlBar, but doesn't care about
 	//the GUI.

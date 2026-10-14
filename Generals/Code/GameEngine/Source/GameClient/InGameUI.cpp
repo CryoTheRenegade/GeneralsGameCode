@@ -2349,6 +2349,10 @@ void InGameUI::messageColor( const RGBColor *rgbColor, UnicodeString format, ...
 //-------------------------------------------------------------------------------------------------
 void InGameUI::addMessageText( const UnicodeString& formattedMessage, const RGBColor *rgbColor )
 {
+	// TheSuperHackers @performance CryoTheRenegade 14/10/2026 Headless mode does not show message text.
+	if (TheGlobalData->m_headless)
+		return;
+
 	Int i;
 	Color color1 = m_messageColor1;
 	Color color2 = m_messageColor2;
@@ -5232,6 +5236,10 @@ void InGameUI::buildRegion( const ICoord2D *anchor, const ICoord2D *dest, IRegio
 //-------------------------------------------------------------------------------------------------
 void InGameUI::addFloatingText(const UnicodeString& text,const Coord3D *pos, Color color)
 {
+	// TheSuperHackers @performance CryoTheRenegade 14/10/2026 Headless mode does not show floating text.
+	if (TheGlobalData->m_headless)
+		return;
+
 	if( TheGameLogic->getDrawIconUI() )
 	{
 		FloatingTextData *newFTD = newInstance( FloatingTextData );
@@ -5534,6 +5542,9 @@ void InGameUI::addWorldAnimation( Anim2DTemplate *animTemplate,
 																	Real durationInSeconds,
 																	Real zRisePerSecond )
 {
+	// TheSuperHackers @performance CryoTheRenegade 14/10/2026 Headless mode does not show world animations.
+	if (TheGlobalData->m_headless)
+		return;
 
 	// sanity
 	if( animTemplate == nullptr || pos == nullptr || durationInSeconds <= 0.0f )
@@ -5912,6 +5923,10 @@ void InGameUI::recreateControlBar()
 
 void InGameUI::refreshCustomUiResources()
 {
+	// TheSuperHackers @performance CryoTheRenegade 14/10/2026 Headless mode does not draw the custom HUD texts.
+	if (TheGlobalData->m_headless)
+		return;
+
 	refreshNetworkLatencyResources();
 	refreshRenderFpsResources();
 	refreshSystemTimeResources();
