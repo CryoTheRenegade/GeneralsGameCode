@@ -938,6 +938,12 @@ void W3DDisplay::init()
 		if (TheGlobalData->m_displayGamma != 1.0f)
 			setGamma(TheGlobalData->m_displayGamma,0.0f,1.0f,FALSE);
 	}
+	else
+	{
+		// TheSuperHackers @performance CryoTheRenegade 14/10/2026 Headless mode loads only the mesh geometry,
+		// because game logic reads bones and bridge vertices from meshes but never their materials.
+		WW3D::Enable_Mesh_Materials_On_Load(false);
+	}
 
 	initAssets();
 

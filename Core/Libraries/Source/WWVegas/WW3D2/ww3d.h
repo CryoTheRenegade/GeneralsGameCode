@@ -327,6 +327,14 @@ public:
 	static void					Enable_Overbright_Modify_On_Load(bool onoff)	{ OverbrightModifyOnLoad = onoff; }
 	static bool					Is_Overbright_Modify_On_Load_Enabled()	{ return OverbrightModifyOnLoad; }
 
+	/*
+	** Mesh materials on load - when this mode is cleared meshes will only
+	** load their geometry. Vertex materials, texture coordinates, vertex colors,
+	** shaders and textures are skipped and the meshes cannot be rendered.
+	*/
+	static void					Enable_Mesh_Materials_On_Load(bool onoff)	{ MeshMaterialsOnLoad = onoff; }
+	static bool					Is_Mesh_Materials_On_Load_Enabled()	{ return MeshMaterialsOnLoad; }
+
 	static bool					Is_Snapshot_Activated()						{ return SnapshotActivated; }
 	static void					Activate_Snapshot(bool b)					{ SnapshotActivated=b; }
 
@@ -388,6 +396,8 @@ private:
 	static bool							MungeSortOnLoad;
 
 	static bool							OverbrightModifyOnLoad;
+
+	static bool							MeshMaterialsOnLoad;
 
 	static FrameGrabClass *			Movie;
 	static bool							PauseRecord;

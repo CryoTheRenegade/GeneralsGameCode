@@ -185,6 +185,8 @@ bool														WW3D::MungeSortOnLoad = false;
 
 bool														WW3D::OverbrightModifyOnLoad = false;
 
+bool														WW3D::MeshMaterialsOnLoad = true;
+
 FrameGrabClass *										WW3D::Movie = nullptr;
 bool														WW3D::PauseRecord;
 bool														WW3D::RecordNextFrame;

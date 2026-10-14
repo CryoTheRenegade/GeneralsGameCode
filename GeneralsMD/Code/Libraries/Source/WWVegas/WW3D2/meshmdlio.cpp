@@ -426,6 +426,29 @@ Error:
 }
 
 
+static bool is_material_chunk(uint32 chunk_id)
+{
+	switch (chunk_id) {
+		case W3D_CHUNK_TEXCOORDS:
+		case W3D_CHUNK_MATERIALS3:
+		case W3D_CHUNK_PER_TRI_MATERIALS:
+		case W3D_CHUNK_VERTEX_COLORS:
+		case W3D_CHUNK_MATERIAL_INFO:
+		case W3D_CHUNK_SHADERS:
+		case W3D_CHUNK_VERTEX_MATERIALS:
+		case W3D_CHUNK_TEXTURES:
+		case W3D_CHUNK_MATERIAL_PASS:
+		case W3D_CHUNK_PRELIT_UNLIT:
+		case W3D_CHUNK_PRELIT_VERTEX:
+		case W3D_CHUNK_PRELIT_LIGHTMAP_MULTI_PASS:
+		case W3D_CHUNK_PRELIT_LIGHTMAP_MULTI_TEXTURE:
+			return true;
+		default:
+			return false;
+	}
+}
+
+
 /***********************************************************************************************
  * MeshModelClass::read_chunks -- read all of the chunks for a mesh                            *
  *                                                                                             *
@@ -451,6 +474,13 @@ WW3DErrorType MeshModelClass::read_chunks(ChunkLoadClass & cload,MeshLoadContext
 		** Process the chunk
 		*/
 		WW3DErrorType error = WW3D_ERROR_OK;
+
+		// TheSuperHackers @performance CryoTheRenegade 14/10/2026 Skips the material chunks when mesh materials are disabled.
+		// The geometry, the bone influences and the culling tree still load.
+		if (!WW3D::Is_Mesh_Materials_On_Load_Enabled() && is_material_chunk(cload.Cur_Chunk_ID())) {
+			cload.Close_Chunk();
+			continue;
+		}
 
 		switch (cload.Cur_Chunk_ID()) {
 
@@ -1864,6 +1894,10 @@ void MeshModelClass::modify_for_overbright()
 
 void MeshModelClass::install_materials(MeshLoadContextClass * context)
 {
+	if (!WW3D::Is_Mesh_Materials_On_Load_Enabled()) {
+		return;
+	}
+
 	int i;
 
 	/*
