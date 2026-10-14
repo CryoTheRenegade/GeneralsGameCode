@@ -1004,6 +1004,11 @@ Bool WorldHeightMap::ParseBlendTileDataChunk(DataChunkInput &file, DataChunkInfo
 /** Function to read in the tiles for a texture class. */
 void WorldHeightMap::readTexClass(TXTextureClass *texClass, TileData **tileData)
 {
+	// TheSuperHackers @performance CryoTheRenegade 14/10/2026 Headless mode does not decode the terrain tile textures,
+	// because only terrain rendering uses their pixels. The texture classes still come from the map file.
+	if (TheGlobalData->m_headless)
+		return;
+
 	char path[_MAX_PATH];
 	path[0] = 0;
 	File *theFile = nullptr;
@@ -2470,6 +2475,11 @@ UnsignedByte *WorldHeightMap::getRGBAlphaDataForWidth(Int width, TBlendTileInfo 
 
 void WorldHeightMap::setupAlphaTiles()
 {
+	// TheSuperHackers @performance CryoTheRenegade 14/10/2026 Headless mode does not build the blend alpha tiles,
+	// because only terrain rendering uses them.
+	if (TheGlobalData->m_headless)
+		return;
+
 	TBlendTileInfo blendInfo;
 	if (m_alphaTiles[0] != nullptr) return;
 	Int k;

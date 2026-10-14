@@ -2,6 +2,7 @@
 set(COREI_GOOGLETEST_SRC
     GoogleTestMain.cpp
     GameEngine/Common/AsciiStringTest.cpp
+    GameEngineDevice/WorldHeightMapTest.cpp
     Libraries/Compression/CompressionManagerTest.cpp
 )
 
