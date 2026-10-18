@@ -2486,7 +2486,7 @@ GameWindow *GUIEdit::newComboBox( GameWindow *parent,
 	//initialize combo box data
 
 	ComboBoxData *comboData = new ComboBoxData;
-	memset ( comboData, 0, sizeof(comboData));
+	memset ( comboData, 0, sizeof(ComboBoxData));
 
 	comboData->entryData = new EntryData;
 	memset ( comboData->entryData, 0, sizeof(EntryData));
