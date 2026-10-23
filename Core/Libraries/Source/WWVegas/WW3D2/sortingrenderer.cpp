@@ -56,6 +56,16 @@ bool SortingRendererClass::_EnableTriangleDraw=true;
 static unsigned DEFAULT_SORTING_POLY_COUNT = 16384;	// (count * 3) must be less than 65536
 static unsigned DEFAULT_SORTING_VERTEX_COUNT = 32768;	// count must be less than 65536
 
+// Builds a Matrix4x4 with the elements of a D3DMATRIX in the same order. Unlike To_Matrix4x4, it doesn't transpose.
+static Matrix4x4 Matrix4x4_From_D3D_Layout(const D3DMATRIX& m)
+{
+	return Matrix4x4(
+		m._11, m._12, m._13, m._14,
+		m._21, m._22, m._23, m._24,
+		m._31, m._32, m._33, m._34,
+		m._41, m._42, m._43, m._44);
+}
+
 void SortingRendererClass::SetMinVertexBufferSize( unsigned val )
 {
 	DEFAULT_SORTING_VERTEX_COUNT = val;
@@ -242,8 +252,8 @@ void SortingRendererClass::Insert_Triangles(
 
 	if (bounding_sphere.Is_Valid())
 	{
-		D3DXMATRIX mtx=(D3DXMATRIX&)state->sorting_state.world*(D3DXMATRIX&)state->sorting_state.view;
-		D3DXVECTOR3 vec=(D3DXVECTOR3&)bounding_sphere.Center;
+		D3DXMATRIX mtx=D3DXMATRIX(state->sorting_state.world)*D3DXMATRIX(state->sorting_state.view);
+		D3DXVECTOR3 vec(bounding_sphere.Center.X,bounding_sphere.Center.Y,bounding_sphere.Center.Z);
 		D3DXVECTOR4 transformed_vec;
 		D3DXVec3Transform(
 			&transformed_vec,
@@ -450,8 +460,8 @@ void SortingRendererClass::Flush_Sorting_Pool()
 			memcpy(dest_verts, src_verts, sizeof(VertexFormatXYZNDUV2)*state->vertex_count);
 			dest_verts += state->vertex_count;
 
-			D3DXMATRIX d3d_mtx=(D3DXMATRIX&)state->sorting_state.world*(D3DXMATRIX&)state->sorting_state.view;
-			const Matrix4x4& mtx=(const Matrix4x4&)d3d_mtx;
+			D3DXMATRIX d3d_mtx=D3DXMATRIX(state->sorting_state.world)*D3DXMATRIX(state->sorting_state.view);
+			const Matrix4x4 mtx=Matrix4x4_From_D3D_Layout(d3d_mtx);
 
 			unsigned short* indices=nullptr;
 			SortingIndexBufferClass* index_buffer=static_cast<SortingIndexBufferClass*>(state->sorting_state.index_buffer);

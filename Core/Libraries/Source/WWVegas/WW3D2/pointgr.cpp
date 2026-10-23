@@ -121,6 +121,16 @@ Vector3 PointGroupClass::_ScreenspaceVertexLocationSizeTable[2][3] =
 static Vector3 GroundMultiplierX(1.0f, 0.0f, 0.0f);
 static Vector3 GroundMultiplierY(0.0f, 1.0f, 0.0f);
 
+// Builds a Matrix4x4 with the elements of a D3DMATRIX in the same order. Unlike To_Matrix4x4, it doesn't transpose.
+static Matrix4x4 Matrix4x4_From_D3D_Layout(const D3DMATRIX& m)
+{
+	return Matrix4x4(
+		m._11, m._12, m._13, m._14,
+		m._21, m._22, m._23, m._24,
+		m._31, m._32, m._33, m._34,
+		m._41, m._42, m._43, m._44);
+}
+
 // Some internal variables
 VectorClass<Vector3>			VertexLoc;		// camera-space vertex locations
 VectorClass<Vector4>			VertexDiffuse;	// vertex diffuse/alpha colors
@@ -1227,8 +1237,9 @@ void PointGroupClass::Update_Arrays(
 				for (i = 0; i < active_points; i++) {
 					if (!Billboard) {
 						// If we're not billboarding, then the coordinate we have is in screen space.
-						Matrix4x4 rotMat;
-						D3DXMatrixRotationZ(&(D3DXMATRIX&) rotMat, ((float)point_orientation[i] / 255.0f * 2 * D3DX_PI));
+						D3DXMATRIX d3dRotMat;
+						D3DXMatrixRotationZ(&d3dRotMat, ((float)point_orientation[i] / 255.0f * 2 * D3DX_PI));
+						const Matrix4x4 rotMat = Matrix4x4_From_D3D_Layout(d3dRotMat);
 
 						Vector4 orientedVecX = rotMat * GroundMultiplierX;
 						Vector4 orientedVecY = rotMat * GroundMultiplierY;

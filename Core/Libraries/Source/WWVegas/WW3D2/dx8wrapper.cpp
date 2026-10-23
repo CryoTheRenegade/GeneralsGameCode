@@ -3007,10 +3007,14 @@ void DX8Wrapper::Set_Light(unsigned index,const LightClass &light)
 	dlight.Ambient.a=1.0f;
 
 	temp=light.Get_Position();
-	dlight.Position=*(D3DVECTOR*) &temp;
+	dlight.Position.x=temp.X;
+	dlight.Position.y=temp.Y;
+	dlight.Position.z=temp.Z;
 
 	light.Get_Spot_Direction(temp);
-	dlight.Direction=*(D3DVECTOR*) &temp;
+	dlight.Direction.x=temp.X;
+	dlight.Direction.y=temp.Y;
+	dlight.Direction.z=temp.Z;
 
 	dlight.Range=light.Get_Attenuation_Range();
 	dlight.Falloff=light.Get_Spot_Exponent();
@@ -3062,9 +3066,14 @@ void DX8Wrapper::Set_Light_Environment(LightEnvironmentClass* light_env)
 			::ZeroMemory(&light, sizeof(D3DLIGHT8));
 
 			light.Type=D3DLIGHT_DIRECTIONAL;
-			(Vector3&)light.Diffuse=light_env->Get_Light_Diffuse(l);
+			const Vector3& diffuse=light_env->Get_Light_Diffuse(l);
+			light.Diffuse.r=diffuse.X;
+			light.Diffuse.g=diffuse.Y;
+			light.Diffuse.b=diffuse.Z;
 			Vector3 dir=-light_env->Get_Light_Direction(l);
-			light.Direction=(const D3DVECTOR&)(dir);
+			light.Direction.x=dir.X;
+			light.Direction.y=dir.Y;
+			light.Direction.z=dir.Z;
 
 			// (gth) TODO: put specular into LightEnvironment?  Much work to be done on lights :-)'
 			if (l==0) {
@@ -3073,9 +3082,18 @@ void DX8Wrapper::Set_Light_Environment(LightEnvironmentClass* light_env)
 
 			if (light_env->isPointLight(l)) {
 				light.Type = D3DLIGHT_POINT;
-				(Vector3&)light.Diffuse=light_env->getPointDiffuse(l);
-				(Vector3&)light.Ambient=light_env->getPointAmbient(l);
-				light.Position = (const D3DVECTOR&)light_env->getPointCenter(l);
+				const Vector3& point_diffuse=light_env->getPointDiffuse(l);
+				light.Diffuse.r=point_diffuse.X;
+				light.Diffuse.g=point_diffuse.Y;
+				light.Diffuse.b=point_diffuse.Z;
+				const Vector3& point_ambient=light_env->getPointAmbient(l);
+				light.Ambient.r=point_ambient.X;
+				light.Ambient.g=point_ambient.Y;
+				light.Ambient.b=point_ambient.Z;
+				const Vector3& point_center=light_env->getPointCenter(l);
+				light.Position.x=point_center.X;
+				light.Position.y=point_center.Y;
+				light.Position.z=point_center.Z;
 				light.Range = light_env->getPointOrad(l);
 
 				// Inverse linear light 1/(1+D)
