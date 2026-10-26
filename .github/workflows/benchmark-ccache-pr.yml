@@ -1,0 +1,23 @@
+name: Benchmark ccache PR 3605
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ${{ matrix.game }}
+    strategy:
+      fail-fast: false
+      matrix:
+        game: [Generals, GeneralsMD]
+    uses: ./.github/workflows/reusable-build-toolchain.yml
+    with:
+      game: ${{ matrix.game }}
+      preset: win32
+      tools: true
+      extras: true
+      tests: true
+      benchmarks: true
