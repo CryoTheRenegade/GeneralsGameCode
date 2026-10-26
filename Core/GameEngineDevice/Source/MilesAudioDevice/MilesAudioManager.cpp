@@ -1075,12 +1075,20 @@ void MilesAudioManager::releasePlayingAudio( PlayingAudio *playing )
 }
 
 //-------------------------------------------------------------------------------------------------
+// Sets the status to 'to' if it is 'from', in one atomic step, and returns the status it had before.
+static PlayingStatus advancePlayingStatus( PlayingAudio *playing, PlayingStatus from, PlayingStatus to )
+{
+	playing->m_status.compare_exchange_strong(from, to);
+	return from;
+}
+
+//-------------------------------------------------------------------------------------------------
 void MilesAudioManager::stopPlayingAudio( PlayingAudio *playing )
 {
 	// Advance from Playing to Stopping
-	InterlockedCompareExchange(reinterpret_cast<volatile long*>(&playing->m_status), PS_Stopping, PS_Playing);
+	advancePlayingStatus(playing, PS_Playing, PS_Stopping);
 	// Advance from Stopping to Stopped
-	const long prevStatus = InterlockedCompareExchange(reinterpret_cast<volatile long*>(&playing->m_status), PS_Stopped, PS_Stopping);
+	const PlayingStatus prevStatus = advancePlayingStatus(playing, PS_Stopping, PS_Stopped);
 	if (prevStatus != PS_Stopping) {
 		return;
 	}
@@ -1597,7 +1605,7 @@ void MilesAudioManager::notifyOfAudioCompletion( UnsignedInt handle, UnsignedInt
 	}
 
 	// it will be cleaned up on the next frame update
-	InterlockedCompareExchange(reinterpret_cast<volatile long*>(&playing->m_status), PS_Stopping, PS_Playing);
+	advancePlayingStatus(playing, PS_Playing, PS_Stopping);
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -2740,7 +2748,7 @@ Bool MilesAudioManager::startNextLoop( PlayingAudio *playing )
 
 		if (playing->m_audioEventRTS->getDelay() > MSEC_PER_LOGICFRAME_REAL) {
 			playing->m_rerequestOnNextUpdate = true;
-			InterlockedCompareExchange(reinterpret_cast<volatile long*>(&playing->m_status), PS_Stopping, PS_Playing);
+			advancePlayingStatus(playing, PS_Playing, PS_Stopping);
 			return true;
 		}
 
