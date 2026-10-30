@@ -56,16 +56,6 @@ bool SortingRendererClass::_EnableTriangleDraw=true;
 static unsigned DEFAULT_SORTING_POLY_COUNT = 16384;	// (count * 3) must be less than 65536
 static unsigned DEFAULT_SORTING_VERTEX_COUNT = 32768;	// count must be less than 65536
 
-// Builds a Matrix4x4 with the elements of a D3DMATRIX in the same order. Unlike To_Matrix4x4, it doesn't transpose.
-static Matrix4x4 Matrix4x4_From_D3D_Layout(const D3DMATRIX& m)
-{
-	return Matrix4x4(
-		m._11, m._12, m._13, m._14,
-		m._21, m._22, m._23, m._24,
-		m._31, m._32, m._33, m._34,
-		m._41, m._42, m._43, m._44);
-}
-
 void SortingRendererClass::SetMinVertexBufferSize( unsigned val )
 {
 	DEFAULT_SORTING_VERTEX_COUNT = val;
@@ -460,8 +450,7 @@ void SortingRendererClass::Flush_Sorting_Pool()
 			memcpy(dest_verts, src_verts, sizeof(VertexFormatXYZNDUV2)*state->vertex_count);
 			dest_verts += state->vertex_count;
 
-			D3DXMATRIX d3d_mtx=D3DXMATRIX(state->sorting_state.world)*D3DXMATRIX(state->sorting_state.view);
-			const Matrix4x4 mtx=Matrix4x4_From_D3D_Layout(d3d_mtx);
+			D3DXMATRIX mtx=D3DXMATRIX(state->sorting_state.world)*D3DXMATRIX(state->sorting_state.view);
 
 			unsigned short* indices=nullptr;
 			SortingIndexBufferClass* index_buffer=static_cast<SortingIndexBufferClass*>(state->sorting_state.index_buffer);
@@ -471,7 +460,7 @@ void SortingRendererClass::Flush_Sorting_Pool()
 			indices+=state->start_index;
 			indices+=state->sorting_state.iba_offset;
 
-			if (mtx[0][2] == 0.0f && mtx[1][2] == 0.0f && mtx[3][2] == 0.0f && mtx[2][2] == 1.0f) {
+			if (mtx.m[0][2] == 0.0f && mtx.m[1][2] == 0.0f && mtx.m[3][2] == 0.0f && mtx.m[2][2] == 1.0f) {
 				// The common case for particle systems.
 				for (int i=0;i<state->polygon_count;++i) {
 					unsigned short idx1=indices[i*3]-state->min_vertex_index;
@@ -511,9 +500,9 @@ void SortingRendererClass::Flush_Sorting_Pool()
 					tis_ptr->tri.j = idx2 + vertex_array_offset;
 					tis_ptr->tri.k = idx3 + vertex_array_offset;
 					tis_ptr->idx = node_id;
-					tis_ptr->z = (mtx[0][2]*(v1->x + v2->x + v3->x) +
-												mtx[1][2]*(v1->y + v2->y + v3->y) +
-												mtx[2][2]*(v1->z + v2->z + v3->z))/3.0f + mtx[3][2];
+					tis_ptr->z = (mtx.m[0][2]*(v1->x + v2->x + v3->x) +
+												mtx.m[1][2]*(v1->y + v2->y + v3->y) +
+												mtx.m[2][2]*(v1->z + v2->z + v3->z))/3.0f + mtx.m[3][2];
 					DEBUG_ASSERTCRASH((! _isnan(tis_ptr->z) && _finite(tis_ptr->z)), ("Triangle has invalid center"));
 				}
 			}
